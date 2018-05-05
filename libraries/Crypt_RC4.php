@@ -3,16 +3,8 @@ class Crypt_RC4{
 	var $s= array();
 	var $i= 0;
 	var $j= 0;
-	var $_key='d8f190d5d1d182fc9cf8f26aff9a4947';
-	function __construct()
-	{
-		//parent::__construct();
-	}
-	/*function Crypt_RC4($key = null){
-		if($key != null){
-			$this->setKey($key);
-		}
-	}*/
+	var $_key='';
+	
 	function setKey($key){
 		if(strlen($key) > 0)
 		$this->_key = $key;
