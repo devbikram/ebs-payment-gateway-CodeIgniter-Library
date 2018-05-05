@@ -1,69 +1,50 @@
 <?php
-class Cart extends CI_Controller {
-	function __construct() {
-		parent::__construct();
-	}
-	function buy_material($material_id=NULL)
+class Crypt_RC4{
+	var $s= array();
+	var $i= 0;
+	var $j= 0;
+	var $_key='d8f190d5d1d182fc9cf8f26aff9a4947';
+	function __construct()
 	{
-		if(!$material_id)
-		{
-			redirect(base_url());
-		}
-		$this->session->set_userdata('back_url','cart/buy_material/'.$material_id);
-		if(!$this->ion_auth->logged_in())
-		{
-			//redirect(base_url('user/login'));
-		}
-		if($_POST)
-		{
-			
-		}
-		$this->data['user_id']=$this->session->user_id=6;
-		$this->data['amount']=99;
-		$this->data['subview']='cart/buy_material';
-		$this->load->view('_layout_main',$this->data);
+		//parent::__construct();
 	}
-	function payment()
-	{
-		$secret_key = "d8f190d5d1d182fc9cf8f26aff9a4947";  
-   		// Your Secret Key
-		if(isset($_GET['DR'])) {
-		    //require('secure.php');
-		     $DR = preg_replace("/\s/","+",$_GET['DR']);
-		     $this->load->library('Crypt_RC4');
-		     $rc4 = new Crypt_RC4($secret_key);
-		     $QueryString = base64_decode($DR);
-		    
-		     $rc4->decrypt($QueryString);
-		     $QueryString = explode('&',$QueryString);
-
-		     $response = array();
-		    foreach($QueryString as $param){
-		        $param = explode('=',$param);
-		        $response[$param[0]] = urldecode($param[1]);
-		     }
+	/*function Crypt_RC4($key = null){
+		if($key != null){
+			$this->setKey($key);
 		}
-		if(($response['ResponseCode'] == 0))
-		{
-		 ?><table><?php
-		    foreach( $response as $key => $value) 
-		    {
-		        ?><tr><td><?php echo $key;?></td><td><?php echo $value; ?></td></tr><?php          
-		    }
-		 ?></table><?php
+	}*/
+	function setKey($key){
+		if(strlen($key) > 0)
+		$this->_key = $key;
+	}
+	function key(&$key){
+		$len= strlen($key);
+		for($this->i = 0; $this->i < 256; $this->i++){
+			$this->s[$this->i] = $this->i;
 		}
-		// payment failed
-		if(($response['ResponseCode'] != 0))
-		{
-		 ?><table><?php
-		    foreach( $response as $key => $value) 
-		    {
-		       ?><tr><td><?php echo $key;?></td><td><?php echo $value; ?></td></tr><?php
-		    }
-		 ?></table><?php
+		$this->j = 0;
+		for($this->i = 0; $this->i < 256; $this->i++){
+			$this->j = ($this->j + $this->s[$this->i] + ord($key[$this->i % $len])) % 256;
+			$t = $this->s[$this->i];
+			$this->s[$this->i] = $this->s[$this->j];
+			$this->s[$this->j] = $t;
 		}
+		$this->i = $this->j = 0;
+	}
+	function crypt(&$paramstr){
+		$this->key($this->_key);
+		$len= strlen($paramstr);
+		for($c= 0; $c < $len; $c++){ $this->i = ($this->i + 1) % 256;
+			$this->j = ($this->j + $this->s[$this->i]) % 256;
+			$t = $this->s[$this->i];
+			$this->s[$this->i] = $this->s[$this->j];
+			$this->s[$this->j] = $t;
+			$t = ($this->s[$this->i] + $this->s[$this->j]) % 256;
+			$paramstr[$c] = chr(ord($paramstr[$c]) ^ $this->s[$t]);
+		}
+	}
+	function decrypt(&$paramstr){
+		$this->crypt($paramstr);
 	}
 }
-
-
 ?>
